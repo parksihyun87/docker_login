@@ -48,8 +48,8 @@ public class SecurityConfig {
                 .httpBasic(httpBasic->httpBasic.disable())
 
                 .authorizeHttpRequests(authorizeHttpRequests->{
-                    authorizeHttpRequests.requestMatchers("/", "api/join", "api/login", "api/reissue").permitAll();
-                    authorizeHttpRequests.requestMatchers("/admin").hasRole("ADMIN");
+                    authorizeHttpRequests.requestMatchers("/", "/api/join", "/api/login", "api/reissue","/api/login/oauth2/code/*","/api/naver","/api/google","/api/kakao").permitAll();
+                    authorizeHttpRequests.requestMatchers("/api/admin").hasRole("ADMIN");
                     authorizeHttpRequests.anyRequest().authenticated();
                 })
 
@@ -59,7 +59,7 @@ public class SecurityConfig {
                     corsConfiguration.addAllowedHeader("*"); //클라이언트가 요청을 보낼때 보낼수 있는 헤더
                     corsConfiguration.setExposedHeaders(List.of("Authorization")); //서버가 응답을 보낼때 브라우저가 접근할수 있는 헤더
                     corsConfiguration.addAllowedMethod("*");
-                    corsConfiguration.addAllowedOrigin("http://localhost");// 프론트에서 요청하는 해당은 허용
+//                    corsConfiguration.addAllowedOrigin("http://localhost");// 프론트에서 요청하는 해당은 허용
                     corsConfiguration.addAllowedOrigin("http://3.34.237.122");//2번째 프론트 내용 허용
                     return corsConfiguration;
                 }))
