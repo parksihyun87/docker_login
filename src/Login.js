@@ -43,6 +43,19 @@ function Login({ onLogin }) {
             // setMessage("Join failed");
         }
     };
+    //
+    const handleNaverLogin =() =>{
+        window.location.href="/api/naver";
+    }
+
+    const handleGoogleLogin =() =>{
+        window.location.href="/api/google";
+    }
+
+    const handleKaKaoLogin =() =>{
+        window.location.href="/api/kakao";
+    }
+    // 링크로 직접 하는 거라서 위의 해당 라우터 없으면 conf상 8000으로 가며, 링크로 해도 됨.
 
     return (
         <div>
@@ -65,6 +78,10 @@ function Login({ onLogin }) {
                 <button type="button" name="join" onClick={handleJoin}>Join</button>
             </form>
             {message && <p>{message}</p>}
+
+            <button onClick={handleNaverLogin}>네이버로 로그인</button>
+            <button onClick={handleGoogleLogin}>구글로 로그인</button>
+            <button onClick={handleKaKaoLogin}>카카오로 로그인</button>
         </div>
     );
 }

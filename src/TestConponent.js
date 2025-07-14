@@ -1,5 +1,5 @@
 import axios from "axios";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useSelector, useDispatch} from "react-redux";
 import {setToken} from "./store";
 import apiClient from "./api/axiosInstance";
@@ -8,7 +8,27 @@ import apiClient from "./api/axiosInstance";
 export default function TestConponent(){
     const [message, setMessage] = useState("");
     const dispatch = useDispatch();
-    const token = useSelector(state=>state.token.token);
+    const newtoken = useSelector(state=>state.token.token);
+
+    useEffect(()=>{
+        const fetchdata = async ()=>{
+            try{
+                const response= await apiClient.post("/reissue",null,
+                    {
+                        withCredentials:true
+                    });
+                const token= response.headers["authorization"];
+                await dispatch(setToken(token));
+
+                console.log("토큰"+token);
+            } catch (e) {
+                if(e.response.data)
+                    console.log(e.response.data);
+            }
+        };
+        fetchdata();
+    },[]);
+
 
     const handleAdmin=async (e)=>{
         try{
@@ -27,14 +47,14 @@ export default function TestConponent(){
 
     };
 
-    const hadleLogout=async (e)=>{
+    const handleLogout=async (e)=>{
        dispatch(setToken(null));
        setMessage("로그아웃되었습니다.");
     }
 
     return(
         <>
-            <button onClick={hadleLogout}>LOGOUT</button>
+            <button onClick={handleLogout}>LOGOUT</button>
             <button onClick={handleAdmin}>ADMIN</button>
             <h1>{message}</h1>
 
