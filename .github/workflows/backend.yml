@@ -5,37 +5,28 @@ on:
     branches:
       - backend
 
-jobs: # 잡스 밑의 이름은 지어준 이름
+jobs:
   build_and_push:
     runs-on: ubuntu-latest
-#    풀 받고 실행
-
     steps:
-#      - 1도커헙 로그인
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#        2checkout 코드/ uses: 깃허브에 복사된 내용을 현재 컨테이너로 복사
-      - name: Checkout respository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-#        3. mysql docker 이미지 빌드 및 푸시
-      - name: BUild MySQL Docker image
-        working-directory: db #db 폴더로 이동
+      - name: Build and Push MySQL Docker image
+        working-directory: db
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb .
-      - name: PUSH MySQL Docker image
-        run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb
-#          4. bakcend docker 이미지 빌드 및 푸시
-      - name: Build Backend Docker image
+
+      - name: Build and Push Backend Docker image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend .
-      - name: Push Backend Docker image
-        run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend
 
   deploy:
@@ -45,8 +36,8 @@ jobs: # 잡스 밑의 이름은 지어준 이름
       - name: Docker pull and run
         uses: appleboy/ssh-action@v0.1.10
         with:
-          username: ubuntu
           host: ${{ secrets.LIVE_SERVER_IP }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             if [ "$(sudo docker ps -a -q -f name=dockerdb)" ]; then
@@ -58,21 +49,21 @@ jobs: # 잡스 밑의 이름은 지어준 이름
             if [ "$(sudo docker images -q ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb)" ]; then
               sudo docker rmi -f ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb
             fi
-            if [ "$(sudo docker images -q -q ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend)" ]; then
+            if [ "$(sudo docker images -q ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend)" ]; then
               sudo docker rmi -f ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend
             fi
+
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb
-            sudo docker run -d -p 3308:3306 --name dockerdb -v dockerdb_volume:/var/lib/mysql ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb
+            sudo docker run -d -p 3308:3306 --name dockerdb \
+              -v dockerdb_volume:/var/lib/mysql \
+              ${{ secrets.DOCKERHUB_USERNAME }}/dockerdb
+
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend
-            sudo docker run -d -p 8000:8080 --name dockerbackend\
-            -e GOOGLE_CLIENT_ID=${{secrets.GOOGLE_CLIENT_ID}}\
-            -e GOOGLE_CLIENT_SECRET=${{secrets.GOOGLE_CLIENT_SECRET}}\
-            -e NAVER_CLIENT_ID=${{secrets.NAVER_CLIENT_ID}}\
-            -e NAVER_CLIENT_SECRET=${{secrets.NAVER_CLIENT_SECRET}}\
-            -e KAKAO_CLIENT_ID=${{secrets.KAKAO_CLIENT_ID}}\
-            -e KAKAO_CLIENT_SECRET=${{secrets.KAKAO_CLIENT_SECRET}}\
-            ${{secrets.DOCKERHUB_USERNAME}}/dockerbackend
-
-
-
-
+            sudo docker run -d -p 8000:8080 --name dockerbackend \
+              -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+              -e NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }} \
+              -e NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }} \
+              -e KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
+              -e KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} \
+              ${{ secrets.DOCKERHUB_USERNAME }}/dockerbackend
